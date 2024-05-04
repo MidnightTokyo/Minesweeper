@@ -8,16 +8,16 @@ namespace Minesweeper
 {
     public class Main : Game
     {
-        public const int CELL_SIZE = 32;
+        public const int CELL_SIZE_PX = 32;
 
         public const int WIDTH = 480;
         public const int HEIGHT = 480;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private MouseState _lastMouseState;
+        //private MouseState _lastMouseState;
 
-        private Minefield _minefield;
+        private MinefieldView _minefieldView;
 
         private readonly Dictionary<string, Texture2D> _cellTextures;
         private Texture2D _numbersTexture;
@@ -60,9 +60,15 @@ namespace Minesweeper
             _numbersTexture = Content.Load<Texture2D>("Textures/Tiles/Numbers");
 
             //Add game board
-            _minefield = new Minefield(this, 15, 15, _cellTextures, _numbersTexture);
-            _minefield.Initialize();
-            Components.Add(_minefield);
+            //_minefield = new Minefield(this, 15, 15, _cellTextures, _numbersTexture);
+            //_minefield.Initialize();
+            //Components.Add(_minefield);
+
+            MinefieldModel minefieldModel = new MinefieldModel(15, 15);
+            MinefieldController minefieldController = new MinefieldController(minefieldModel);
+            _minefieldView = new MinefieldView(this, minefieldModel, minefieldController, _cellTextures, _numbersTexture);
+            _minefieldView.Initialize();
+            Components.Add(_minefieldView);
 
             // TODO: use this.Content to load your game content here
         }
@@ -73,19 +79,6 @@ namespace Minesweeper
                 Exit();
 
             // TODO: Add your update logic here
-
-            if (Keyboard.GetState().IsKeyDown(Keys.Space))
-                _minefield.Initialize();
-
-            MouseState mouseState = Mouse.GetState();
-
-            if (_lastMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
-                _minefield.LeftMouseClick(mouseState.Position);
-
-            if (_lastMouseState.RightButton == ButtonState.Pressed && mouseState.RightButton == ButtonState.Released)
-                _minefield.RightMouseClick(mouseState.Position);
-
-            _lastMouseState = mouseState;
 
             base.Update(gameTime);
         }
