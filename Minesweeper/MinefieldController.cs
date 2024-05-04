@@ -42,7 +42,10 @@ namespace Minesweeper
 
         public void RightMouseClick(int posX, int posY)
         {
-            _minefieldModel.MarkCell(posX, posY);
+            if (!_minefieldModel.IsLose())
+            {
+                _minefieldModel.MarkCell(posX, posY);
+            }
         }
     }
 }
