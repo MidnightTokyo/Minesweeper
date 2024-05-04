@@ -8,7 +8,7 @@ namespace Minesweeper
 {
     public class Main : Game
     {
-        public const int CELL_SIZE = 32;
+        public const int CELL_SIZE_PX = 32;
 
         public const int WIDTH = 480;
         public const int HEIGHT = 480;
@@ -17,7 +17,7 @@ namespace Minesweeper
         private SpriteBatch _spriteBatch;
         private MouseState _lastMouseState;
 
-        private Minefield _minefield;
+        //private min _minefield;
 
         private readonly Dictionary<string, Texture2D> _cellTextures;
         private Texture2D _numbersTexture;
@@ -60,9 +60,13 @@ namespace Minesweeper
             _numbersTexture = Content.Load<Texture2D>("Textures/Tiles/Numbers");
 
             //Add game board
-            _minefield = new Minefield(this, 15, 15, _cellTextures, _numbersTexture);
-            _minefield.Initialize();
-            Components.Add(_minefield);
+            //_minefield = new Minefield(this, 15, 15, _cellTextures, _numbersTexture);
+            //_minefield.Initialize();
+            //Components.Add(_minefield);
+
+            MinefieldView view = new MinefieldView(this, 15, 15, _cellTextures, _numbersTexture);
+            view.Initialize();
+            Components.Add(view);
 
             // TODO: use this.Content to load your game content here
         }
@@ -73,9 +77,6 @@ namespace Minesweeper
                 Exit();
 
             // TODO: Add your update logic here
-
-            if (Keyboard.GetState().IsKeyDown(Keys.Space))
-                _minefield.Initialize();
 
             MouseState mouseState = Mouse.GetState();
 
