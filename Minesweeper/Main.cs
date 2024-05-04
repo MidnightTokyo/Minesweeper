@@ -15,9 +15,9 @@ namespace Minesweeper
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private MouseState _lastMouseState;
+        //private MouseState _lastMouseState;
 
-        //private min _minefield;
+        private MinefieldView _minefieldView;
 
         private readonly Dictionary<string, Texture2D> _cellTextures;
         private Texture2D _numbersTexture;
@@ -64,9 +64,11 @@ namespace Minesweeper
             //_minefield.Initialize();
             //Components.Add(_minefield);
 
-            MinefieldView view = new MinefieldView(this, 15, 15, _cellTextures, _numbersTexture);
-            view.Initialize();
-            Components.Add(view);
+            MinefieldModel minefieldModel = new MinefieldModel(15, 15);
+            MinefieldController minefieldController = new MinefieldController(minefieldModel);
+            _minefieldView = new MinefieldView(this, minefieldModel, minefieldController, _cellTextures, _numbersTexture);
+            _minefieldView.Initialize();
+            Components.Add(_minefieldView);
 
             // TODO: use this.Content to load your game content here
         }
@@ -77,16 +79,6 @@ namespace Minesweeper
                 Exit();
 
             // TODO: Add your update logic here
-
-            MouseState mouseState = Mouse.GetState();
-
-            if (_lastMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
-                _minefield.LeftMouseClick(mouseState.Position);
-
-            if (_lastMouseState.RightButton == ButtonState.Pressed && mouseState.RightButton == ButtonState.Released)
-                _minefield.RightMouseClick(mouseState.Position);
-
-            _lastMouseState = mouseState;
 
             base.Update(gameTime);
         }

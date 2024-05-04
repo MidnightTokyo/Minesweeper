@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Minesweeper.Cells;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,18 +26,22 @@ namespace Minesweeper
         };
 
         private MinefieldModel _minefieldModel;
+        private MinefieldController _minefieldController;
 
         private SpriteBatch _spriteBatch;
         private Vector2 _fieldStartPosition;
+        private MouseState _lastMouseState;
 
         private Rectangle[,] _fieldGrid;
 
         private Dictionary<string, Texture2D> _cellTextures;
         private Texture2D _numbersTexture;
 
-        public MinefieldView(Game game, MinefieldModel minefieldModel, Dictionary<string, Texture2D> cellTextures, Texture2D numbersTexture) : base(game)
+        public MinefieldView(Game game, MinefieldModel minefieldModel, MinefieldController minefieldController, Dictionary<string, Texture2D> cellTextures, Texture2D numbersTexture) : base(game)
         {
             _minefieldModel = minefieldModel;
+            _minefieldController = minefieldController;
+            _minefieldController.SetView(this);
 
             _spriteBatch = (SpriteBatch)Game.Services.GetService(typeof(SpriteBatch));
 
@@ -47,12 +53,14 @@ namespace Minesweeper
             _fieldStartPosition = new Vector2(windowCenter.X - fieldCenter.X, windowCenter.Y - fieldCenter.Y);
 
             _fieldGrid = new Rectangle[fieldWidth, fieldHeight];
+            MakeGrid();
+
+            _cellTextures = cellTextures;
+            _numbersTexture = numbersTexture;
         }
 
         public override void Initialize()
         {
-            MakeGrid();
-
             base.Initialize();
         }
 
@@ -75,32 +83,37 @@ namespace Minesweeper
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
             Rectangle rectangle;
-            BaseCell cell;
+            BaseCell mainCell;
+            MineCell mineCell;
+            FlagCell flagCell;
             for (int x = 0; x < _fieldGrid.GetLength(0); x++)
             {
                 for (int y = 0; y < _fieldGrid.GetLength(1); y++)
                 {
                     rectangle = _fieldGrid[x, y];
-                    cell = _minefieldModel.GetMainCell(x,y);
 
-                    if (cell == null) continue;
+                    mainCell = _minefieldModel.GetMainCell(x, y);
 
-                    _spriteBatch.Draw(_cellTextures[cell.TextureName], rectangle, Color.White);
+                    if (mainCell == null) continue;
 
-                    /*if (_lose && _mineCells[x, y] != null)
+                    _spriteBatch.Draw(_cellTextures[mainCell.TextureName], rectangle, Color.White);
+                    
+                    mineCell = _minefieldModel.GetMineCell(x, y);
+                    if (_minefieldModel.IsLose() && mineCell != null)
                     {
-                        MineCell mineCell = _mineCells[x, y];
                         _spriteBatch.Draw(_cellTextures[mineCell.TextureName], rectangle, Color.White);
-                    }*/
-
-                    if (_flagCells[x, y] != null)
-                    {
-                        _spriteBatch.Draw(_cellTextures[FlagCell.StaticTextureName], rectangle, Color.White);
                     }
 
-                    if (cell is OpenedCell && _mineCells[x, y] == null)
+                    flagCell = _minefieldModel.GetFlagCell(x, y);
+
+                    if (flagCell != null)
                     {
-                        int mineCount = GetMineCountNerbyCell(x, y);
+                        _spriteBatch.Draw(_cellTextures[flagCell.TextureName], rectangle, Color.White);
+                    }
+
+                    if (mainCell is OpenedCell && mineCell == null)
+                    {
+                        int mineCount = _minefieldModel.GetMinesCountNearbyCell(x, y);
 
                         if (mineCount > 0 && mineCount < 9)
                         {
@@ -113,6 +126,45 @@ namespace Minesweeper
             _spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            MouseState mouseState = Mouse.GetState();
+
+            if (_lastMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
+            {
+                for (int x = 0; x < _fieldGrid.GetLength(0); x++)
+                {
+                    for (int y = 0; y < _fieldGrid.GetLength(1); y++)
+                    {
+                        if (_fieldGrid[x, y].Contains(mouseState.Position))
+                        {
+                            _minefieldController.LeftMouseClick(x, y);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (_lastMouseState.RightButton == ButtonState.Pressed && mouseState.RightButton == ButtonState.Released)
+            {
+                for (int x = 0; x < _fieldGrid.GetLength(0); x++)
+                {
+                    for (int y = 0; y < _fieldGrid.GetLength(1); y++)
+                    {
+                        if (_fieldGrid[x, y].Contains(mouseState.Position))
+                        {
+                            _minefieldController.RightMouseClick(x, y);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            _lastMouseState = mouseState;
+
+            base.Update(gameTime);
         }
     }
 }
