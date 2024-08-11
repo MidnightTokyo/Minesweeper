@@ -39,6 +39,7 @@ namespace Minesweeper
 
         public MinefieldView(Game game, MinefieldModel minefieldModel, MinefieldController minefieldController, Dictionary<string, Texture2D> cellTextures, Texture2D numbersTexture) : base(game)
         {
+
             _minefieldModel = minefieldModel;
             _minefieldController = minefieldController;
             _minefieldController.SetView(this);
@@ -47,7 +48,7 @@ namespace Minesweeper
 
             _minefieldModel.GetFieldSize(out int fieldWidth, out int fieldHeight);
 
-            Vector2 windowCenter = new Vector2(Main.WIDTH / 2, Main.HEIGHT / 2);
+            Vector2 windowCenter = new Vector2(Main.VIRTUAL_WIDTH / 2, Main.VIRTUAL_HEIGHT / 2);
             Vector2 fieldCenter = new Vector2((fieldWidth * Main.CELL_SIZE_PX) / 2, (fieldHeight * Main.CELL_SIZE_PX) / 2);
 
             _fieldStartPosition = new Vector2(windowCenter.X - fieldCenter.X, windowCenter.Y - fieldCenter.Y);
@@ -80,7 +81,7 @@ namespace Minesweeper
 
         public override void Draw(GameTime gameTime)
         {
-            _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: Main.ScaledMatrix);
 
             Rectangle rectangle;
             BaseCell mainCell;
@@ -131,6 +132,9 @@ namespace Minesweeper
         public override void Update(GameTime gameTime)
         {
             MouseState mouseState = Mouse.GetState();
+            Vector2 mousePostion = new Vector2(mouseState.X, mouseState.Y);
+
+            mousePostion = Vector2.Transform(mousePostion, Matrix.Invert(Main.ScaledMatrix));
 
             if (_lastMouseState.LeftButton == ButtonState.Pressed && mouseState.LeftButton == ButtonState.Released)
             {
@@ -138,7 +142,7 @@ namespace Minesweeper
                 {
                     for (int y = 0; y < _fieldGrid.GetLength(1); y++)
                     {
-                        if (_fieldGrid[x, y].Contains(mouseState.Position))
+                        if (_fieldGrid[x, y].Contains(mousePostion))
                         {
                             _minefieldController.LeftMouseClick(x, y);
                             break;
@@ -153,7 +157,7 @@ namespace Minesweeper
                 {
                     for (int y = 0; y < _fieldGrid.GetLength(1); y++)
                     {
-                        if (_fieldGrid[x, y].Contains(mouseState.Position))
+                        if (_fieldGrid[x, y].Contains(mousePostion))
                         {
                             _minefieldController.RightMouseClick(x, y);
                             break;

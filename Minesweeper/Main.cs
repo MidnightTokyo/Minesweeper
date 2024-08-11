@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Minesweeper.Cells;
+using System;
 using System.Collections.Generic;
 
 namespace Minesweeper
@@ -10,8 +11,13 @@ namespace Minesweeper
     {
         public const int CELL_SIZE_PX = 32;
 
-        public const int WIDTH = 480;
-        public const int HEIGHT = 480;
+        public const int VIRTUAL_WIDTH = 480;
+        public const int VIRTUAL_HEIGHT = 480;
+
+        private int _lastWidth;
+        private int _lastHeight;
+
+        public static Matrix ScaledMatrix { private set; get; }
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -29,6 +35,8 @@ namespace Minesweeper
             IsMouseVisible = true;
 
             _cellTextures = new Dictionary<string, Texture2D>();
+
+            ScaledMatrix = Matrix.CreateScale(1.0f);
         }
 
         protected override void Initialize()
@@ -36,13 +44,38 @@ namespace Minesweeper
             // TODO: Add your initialization logic here
 
             Window.Title = "MonoGame XNA Minesweeper 2D";
+            Window.AllowUserResizing = true;
+            Window.ClientSizeChanged += ClientSizeChanged;
 
-            _graphics.PreferredBackBufferWidth = WIDTH;
-            _graphics.PreferredBackBufferHeight = HEIGHT;
+            _graphics.PreferredBackBufferWidth = VIRTUAL_WIDTH;
+            _graphics.PreferredBackBufferHeight = VIRTUAL_HEIGHT;
             
             _graphics.ApplyChanges();
 
             base.Initialize();
+        }
+
+        private void ClientSizeChanged(object sender, EventArgs e)
+        {
+            if (_lastWidth != Window.ClientBounds.Width)
+            {
+                _graphics.PreferredBackBufferHeight = Window.ClientBounds.Width;
+                _graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
+            }
+            else if (_lastHeight != Window.ClientBounds.Height)
+            {
+                _graphics.PreferredBackBufferWidth = Window.ClientBounds.Height;
+                _graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
+            }
+            _graphics.ApplyChanges();
+
+            float scaleX = (float)GraphicsDevice.Viewport.Width / VIRTUAL_WIDTH;
+            float scaleY = (float)GraphicsDevice.Viewport.Height / VIRTUAL_HEIGHT;
+
+            _lastWidth = Window.ClientBounds.Width;
+            _lastHeight = Window.ClientBounds.Height;
+
+            ScaledMatrix = Matrix.CreateScale(scaleX, scaleY, 1.0f);
         }
 
         protected override void LoadContent()
